@@ -4,9 +4,9 @@ const ledgerModel  = require("../models/ledger.model");
 const accountSchema = new mongoose.Schema({
     user : {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "user",
+        ref: "user", // name will be same as it was given to user model.
         required: [true, "account must be associated with some user"],
-        index: true
+        index: true // creating an index on the basis of userId, so that searching becomes faster (uses b+ tree).
     },
     status: {
         type: String,
@@ -26,9 +26,12 @@ const accountSchema = new mongoose.Schema({
     timestamps: true
 })
 
+// creating a compound index, so that we can search using status as well.
 accountSchema.index({user: 1, status: 1})
 
 accountSchema.methods.getBalance =  async function (session = null){
+
+    // creating an aggregate pipeline. It returns an array. 
     const balanceData = await ledgerModel.aggregate([
         {$match: {account : this._id}},
         {

@@ -48,6 +48,9 @@ async function userLoginController(req, res) {
 
     const user = await userModel.findOne({ email }).select("+password");
 
+// ".select" because in user model we are finding it by email only and 
+// flaging password false, so to explicitly select it, we are using ".select".
+
     if (!user) {
         return res.status(401).json({
             message: "Invalid email or password",

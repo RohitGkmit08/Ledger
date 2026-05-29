@@ -90,7 +90,10 @@ async function createTransaction(req, res){
         })
     }
 
-    // Start MongoDB Session for transaction atomicity
+    // Start MongoDB Session -> either all operations are succeeded or all operation are rolled back
+    // MongoDb session returns a session object.
+    // Also, this is the start of a transaction.
+
     const session = await mongoose.startSession();
     session.startTransaction();
 
@@ -106,6 +109,8 @@ async function createTransaction(req, res){
         }
 
         // 5. Create transaction (PENDING)
+
+        // .create() in MongoDb returns an array, and destructuring transction to access document easily.
         const [transaction] = await transactionModel.create(
             [
                 {
