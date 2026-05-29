@@ -42,8 +42,13 @@ async function createTransaction(req, res){
         })
     }
 
-    const fromUserAccount = await accountModel.findById(fromAccount).populate("user");
-    const toUserAccount = await accountModel.findById(toAccount).populate("user");
+    const fromUserAccount = await accountModel.findOne({
+        _id: fromAccount
+    })
+
+    const toUserAccount = await accountModel.findOne({
+        _id: toAccount
+    })
 
     if(!fromUserAccount || !toUserAccount){
         return res.status(400).json({
@@ -161,8 +166,8 @@ async function createTransaction(req, res){
         // 10. Send email notification
         if (fromUserAccount.user && toUserAccount.user) {
             emailService.sendTransactionEmail({
-                fromUser: fromUserAccount.user,
-                toUser: toUserAccount.user,
+                fromUserId: fromUserAccount.user,
+                toUserId: toUserAccount.user,
                 fromAccount: fromAccount,
                 toAccount: toAccount,
                 amount: amount,

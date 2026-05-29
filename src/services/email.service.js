@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer")
+const userModel = require("../models/user.model")
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -59,36 +60,47 @@ async function  sendRegistrationEmail(userEmail, userName) {
   }
 }
 
-async function sendTransactionEmail({ fromUser, toUser, fromAccount, toAccount, amount, status, transactionId }) {
+async function sendTransactionEmail({
+  fromUserId,
+  toUserId,
+  fromAccount,
+  toAccount,
+  amount,
+  status,
+  transactionId
+}) {
   try {
-    const subject = `Transaction Notification: ${status}`;
-    
-    // Sender Email Content
-    const senderText = `Hello ${fromUser.name},\n\nYour transfer of ${amount} INR to account ${toAccount} was ${status.toLowerCase()}.\nTransaction ID: ${transactionId}`;
-    const senderHtml = `
-      <h2>Transaction Notification</h2>
-      <p>Hello <strong>${fromUser.name}</strong>,</p>
-      <p>Your transfer of <strong>${amount} INR</strong> to account <code>${toAccount}</code> was <strong>${status}</strong>.</p>
-      <p>Transaction ID: <code>${transactionId}</code></p>
-    `;
 
-    // Receiver Email Content
-    const receiverText = `Hello ${toUser.name},\n\nYou have received a transfer of ${amount} INR from account ${fromAccount}.\nTransaction ID: ${transactionId}`;
-    const receiverHtml = `
-      <h2>Transaction Notification</h2>
-      <p>Hello <strong>${toUser.name}</strong>,</p>
-      <p>You have received a transfer of <strong>${amount} INR</strong> from account <code>${fromAccount}</code>.</p>
-      <p>Transaction ID: <code>${transactionId}</code></p>
-    `;
+    const fromUser = await userModel.findById(fromUserId);
+
+    const toUser = await userModel.findById(toUserId);
+
+    if (!fromUser || !toUser) {
+      throw new Error("User not found");
+    }
+
+    const subject = `Transaction ${status}`;
 
     await Promise.all([
-      sendEmail(fromUser.email, subject, senderText, senderHtml),
-      sendEmail(toUser.email, subject, receiverText, receiverHtml)
+      sendEmail(
+        fromUser.email,
+        subject,
+        `Transferred ${amount} INR`,
+        `<h2>Hello ${fromUser.name}</h2>
+         <p>You transferred ${amount} INR.</p>`
+      ),
+
+      sendEmail(
+        toUser.email,
+        subject,
+        `Received ${amount} INR`,
+        `<h2>Hello ${toUser.name}</h2>
+         <p>You received ${amount} INR.</p>`
+      )
     ]);
 
-    console.log("Transaction emails sent successfully");
-  } catch (error) {
-    console.error("Error sending transaction email:", error);
+  } catch (err) {
+    console.error(err);
   }
 }
 
